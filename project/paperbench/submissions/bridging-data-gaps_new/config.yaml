@@ -1,0 +1,42 @@
+training:
+  adaptor_lr_ddpm: 0.00005
+  adaptor_lr_ldm: 0.00001
+  batch_size: 40
+  max_adaptor_steps: 300
+  inner_loop_steps_J: 10
+  gamma: 5
+  omega: 0.02
+
+model:
+  adaptor_dims_ddpm:
+    c: 4
+    d: 8
+  adaptor_dims_ldm:
+    c: 2
+    d: 8
+  adaptor_init: zero
+
+data:
+  source_domains:
+    - FFHQ
+    - LSUN Church
+  target_domains_10_shot:
+    - Babies
+    - Sunglasses
+    - Raphael's paintings
+    - Sketches
+    - Modigliani paintings
+    - Haunted Houses
+    - Landscape drawings
+  large_fid_target_counts:
+    - 2500
+    - 2700
+
+eval:
+  metrics:
+    - Intra-LPIPS
+    - FID
+  intra_lpips_num_images: 1000
+  large_target_fid_counts:
+    - 2500
+    - 2700

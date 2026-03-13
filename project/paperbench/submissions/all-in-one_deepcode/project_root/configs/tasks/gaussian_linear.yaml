@@ -1,0 +1,16 @@
+task_name: gaussian_linear
+description: "Gaussian Linear data sampler task with a single Gaussian component; θ ~ N(0, I_dim_theta), x | θ ~ N(A θ, Σ_x)."
+
+dim_theta: 2
+dim_x: 2
+seed: 0
+n_components: 1
+A:
+  - [[1.0, 0.0],
+     [0.0, 1.0]]
+Sigma_x:
+  - [[0.1, 0.0],
+     [0.0, 0.1]]
+weights:
+  - 1.0
+notes: "Minimal Gaussian linear task config with a single component for basic SBI evaluation."

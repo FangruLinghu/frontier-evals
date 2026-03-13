@@ -1,0 +1,56 @@
+task_name: guided_diffusion
+base_config: ../base.yaml
+
+# Task-specific metadata
+task_config:
+  description: "Two Moons synthetic dataset for joint diffusion SBI with interval guidance."
+  dataset_id: two_moons
+  notes: "Toy nonlinear dataset to evaluate sampling under structured conditioning."
+
+# Model and diffusion configuration
+model_specs:
+  simformer: simformer.yaml
+
+diffusion_config:
+  sde_type: VPSDE
+  beta_min: 0.01
+  beta_max: 10.0
+  sigma_min: 0.0001
+  sigma_max: 15.0
+  steps: 500
+  t_schedule: linear
+  time_encoding: true
+
+# Diffusion guidance configuration (interval constraints in this task)
+guidance_config:
+  type: interval
+  constraints:
+    - name: x0_interval
+      type: interval
+      lower: -2.0
+      upper: 2.0
+  s_schedule: 1.0
+  strength: 0.5
+  eps: 0.001
+  step_budget: 50
+
+training_config:
+  batch_size: 256
+  epochs: 30
+  lr: 0.0003
+  max_grad_norm: 1.0
+  seed: 0
+  mc_mask_p: 0.25
+
+# Data configuration (task and seed)
+data_config:
+  task: two_moons
+  seed: 0
+
+evaluation_config:
+  metrics: [c2st, probability_flow_nll, calibration]
+  per_task_report: true
+
+runtime_config:
+  seed: 0
+  devices: ["cpu"]

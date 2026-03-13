@@ -1,0 +1,51 @@
+# Base configuration for joint diffusion SBI experiments
+# This file provides common defaults that are extended by task-specific configs.
+
+version: 0.1
+seed: 0
+
+paths:
+  data_dir: data
+  results_dir: results
+  logs_dir: logs
+
+# Diffusion forward process hyperparameters (SDE form)
+diffusion:
+  sde_type: VPSDE
+  beta_min: 0.01
+  beta_max: 10.0
+  sigma_min: 1e-4
+  sigma_max: 15.0
+  steps: 500
+  t_schedule: linear
+
+training:
+  batch_size: 64
+  epochs: 20
+  lr: 0.0003
+  max_grad_norm: 1.0
+  seed: 0
+
+model:
+  type: simformer
+  d_model: 64
+  n_layers: 6
+  n_heads: 4
+  d_ff: 150
+  seed: 0
+
+tasks:
+  gaussian_linear: {}
+  two_moons: {}
+  slcp: {}
+  lotka_volterra: {}
+  sir: {}
+  hodgkin_huxley: {}
+  gravitational_waves: {}
+
+model_specs:
+  simformer: {}
+  guided_diffusion: {}
+
+# Reference to the guided-diffusion style configuration; a separate YAML can override or extend
+guided_diffusion_config: guided_diffusion.yaml

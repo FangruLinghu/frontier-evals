@@ -1,0 +1,61 @@
+# SIR task configuration for joint diffusion SBI
+
+# This config mirrors the structure used by other tasks (Gaussian Linear, Two Moons, Lotka-Volterra)
+# and wires into the shared diffusion framework (SimFormer-based joint model, VPSDE schedules, and guidance).
+
+task_name: sir
+base_config: ../base.yaml
+
+task_config:
+  description: "SIR model task for joint θ/x inference with diffusion-based conditioning."
+  dataset_id: sir
+  observation_points: 60
+  horizon: 60
+
+model_specs:
+  simformer: ../model_specs/simformer.yaml
+
+diffusion_config:
+  sde_type: VPSDE
+  beta_min: 0.01
+  beta_max: 10.0
+  sigma_min: 0.0001
+  sigma_max: 15.0
+  steps: 500
+  t_schedule: linear
+  time_encoding: true
+
+guidance_config:
+  type: interval
+  constraints:
+    - name: population_bounds
+      type: interval
+      lower: 0.0
+      upper: 1.0
+  s_schedule: 1.0
+  strength: 0.5
+  eps: 0.001
+  step_budget: 50
+
+training_config:
+  batch_size: 128
+  epochs: 25
+  lr: 0.0003
+  max_grad_norm: 1.0
+  seed: 0
+  mc_mask_p: 0.25
+
+data_config:
+  task: sir
+  seed: 0
+
+evaluation_config:
+  metrics:
+    - c2st
+    - probability_flow_nll
+    - calibration
+  per_task_report: true
+
+runtime_config:
+  seed: 0
+  devices: ["cpu"]
