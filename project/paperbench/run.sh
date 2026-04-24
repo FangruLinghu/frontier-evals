@@ -12,11 +12,11 @@
 #     judge=dummy \
 #     out_dir=eval_outputs/
 
-# For real grading with gpt-4o-mini:
+# For real grading:
 uv run python paperbench/scripts/run_judge.py \
     submission_path=submissions/bridging-data-gaps_v1 \
     paper_id=bridging-data-gaps \
     judge=simple \
     out_dir=outputs/bridging-data-gaps_v1 \
     completer_config=preparedness_turn_completer.oai_completions_turn_completer:OpenAICompletionsTurnCompleter.Config \
-    completer_config.model=gpt-4o-mini
+    completer_config.model="gpt-5.1"

@@ -54,6 +54,7 @@ CONTEXT_WINDOW_LENGTHS: dict[str, int] = {
     "gpt-5-codex": 400_000,
     "gpt-5-pro-2025-10-06": 400_000,
     "gpt-5-pro": 400_000,
+    "gpt-5.1": 400_000,
 }
 
 

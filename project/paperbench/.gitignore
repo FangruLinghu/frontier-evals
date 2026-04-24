@@ -3,6 +3,14 @@
 run_eval.log
 paperbench/solvers/agent.env
 
+# Submissions and eval outputs are generated data, not source code
+submissions/
+outputs/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
 # Ignore everything in runs directory
 runs/
 
