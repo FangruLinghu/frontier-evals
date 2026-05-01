@@ -5,9 +5,13 @@ paperbench/solvers/agent.env
 
 # Submissions and eval outputs are generated data, not source code
 submissions/
+submissions_for_run/
 outputs/
 *.pt
 *.pth
+
+# Local Claude Code state
+.claude/
 *.ckpt
 *.safetensors
 
