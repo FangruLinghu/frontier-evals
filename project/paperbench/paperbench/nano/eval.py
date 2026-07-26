@@ -29,12 +29,12 @@ from paperbench.nano.structs import (
 )
 from paperbench.nano.task import PBTask
 from paperbench.nano.utils import SPLIT_TO_EXPECTED_PAPERS, gather_eval_runs
+from paperbench.paper_registry import paper_registry
 from paperbench.utils import (
     create_run_dir,
     create_run_id,
     get_default_runs_dir,
     get_experiments_dir,
-    get_paperbench_data_dir,
     get_root,
     get_timestamp,
     is_docker_running,
@@ -55,9 +55,16 @@ class PaperBench(PythonCodingEval):
     monitor_config: Monitor.Config = chz.field(default_factory=BasicMonitor.Config)
 
     # task args
-    paper_split: Literal["debug", "dev", "human", "testing", "all"] = chz.field(
+    paper_split: Literal[
+        "debug", "dev", "human", "testing", "all", "nips26-rebuttal"
+    ] = chz.field(
         default="all",
-        doc="Paper split to use. One of 'testing' (lca-on-the-line only), 'debug' (rice only), 'dev' (two papers), 'human' (papers used in human baseline), 'all' (full set)",
+        doc=(
+            "Paper split to use. One of 'testing' (lca-on-the-line only), "
+            "'debug' (rice only), 'dev' (two papers), 'human' (papers used in "
+            "human baseline), 'all' (built-in full set), or 'nips26-rebuttal' "
+            "(the five NeurIPS 2026 rebuttal papers)"
+        ),
         # should match what is in experiments/splits/
     )
     resume_run_group_id: str | None = chz.field(default=None)
@@ -346,13 +353,12 @@ class PaperBench(PythonCodingEval):
         lightweight CI runs that hydrate a minimal subset of the dataset.
         """
 
-        papers_dir = get_paperbench_data_dir() / "papers"
         split_path = get_experiments_dir() / "splits" / f"{self.paper_split}.txt"
 
         paper_ids = [line.strip() for line in split_path.read_text().splitlines() if line.strip()]
 
         for paper_id in paper_ids:
-            paper_path = papers_dir / paper_id / "paper.md"
+            paper_path = paper_registry.get_paper(paper_id).paper_md
             assert paper_path.exists(), f"Paper at {paper_path} is missing; hydrate via git lfs."
             with open(paper_path, "r") as f:
                 assert len(f.readlines()) > 5, (
