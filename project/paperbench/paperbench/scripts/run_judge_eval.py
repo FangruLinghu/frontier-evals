@@ -260,18 +260,26 @@ async def main(
     agg_token_usage = None
     if judge_type == "simple":
         total_token_usage = TokenUsage()
-        model_stats: dict[str, dict[str, list[int]]] = defaultdict(lambda: {"in": [], "out": []})
+        model_stats: dict[str, dict[str, list[int]]] = defaultdict(
+            lambda: {
+                "in": [],
+                "out": [],
+                "requests": [],
+                "cached_in": [],
+                "reasoning_out": [],
+            }
+        )
         for result in results:
             if result.token_usage is None:
                 continue
+            total_token_usage.merge(result.token_usage)
             for model, usage in result.token_usage.usage.items():
-                total_token_usage.add_usage(model, usage["in"], usage["out"])
-                model_stats[model]["in"].append(usage["in"])
-                model_stats[model]["out"].append(usage["out"])
+                for metric, value in usage.items():
+                    model_stats[model][metric].append(value)
         agg_token_usage = {
             "total": total_token_usage.to_dict(),
             "mean": {
-                model: {"in": np.mean(stats["in"]), "out": np.mean(stats["out"])}
+                model: {metric: np.mean(values) for metric, values in stats.items()}
                 for model, stats in model_stats.items()
             },
         }

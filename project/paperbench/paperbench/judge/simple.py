@@ -373,7 +373,7 @@ class SimpleJudge(Judge):
         self,
         task: TaskNode,
         max_files: int | None = 10,
-    ) -> str:
+    ) -> tuple[str, TokenUsage | None]:
         leaf_logger = self.get_logger(task)
         """
         Returns the relevant files for judging the task.
@@ -411,6 +411,8 @@ class SimpleJudge(Judge):
             },
         ]
         model_response = await self.completer.async_completion(conversation=messages)
+        response_usage = model_response.usage if hasattr(model_response, "usage") else None
+        file_selection_usage = self._handle_usage(self.completer, None, response_usage)
         selected_files = model_response.output_messages[0].content
         if selected_files is None:
             raise Exception("No response received from completer for file selection")
@@ -471,12 +473,13 @@ class SimpleJudge(Judge):
                 leaf_logger.info(f"File {full_path} is not readable! Error: {e}")
 
         # Decode once at the end, ensuring we end with complete lines
-        return self.token_encoder.decode(selected_files_tokens).rsplit("\n", 1)[0]
+        relevant_files = self.token_encoder.decode(selected_files_tokens).rsplit("\n", 1)[0]
+        return relevant_files, file_selection_usage
 
     async def _construct_grade_leaf_messages(
         self, task: TaskNode
-    ) -> list[ChatCompletionMessageParam]:
-        relevant_files = await self._prepare_relevant_files(task)
+    ) -> tuple[list[ChatCompletionMessageParam], TokenUsage | None]:
+        relevant_files, file_selection_usage = await self._prepare_relevant_files(task)
         relevant_files_prompt = (
             f"Here are the most relevant files included in the submission attempt, concatenated:\n<files>\n{relevant_files}\n</files>"
             if task.task_category != "Result Analysis"
@@ -545,7 +548,7 @@ class SimpleJudge(Judge):
                 "content": GRADING_PROMPT(continuous=(task.task_category == "Subtree")),
             },
         ]
-        return messages
+        return messages, file_selection_usage
 
     @override
     async def grade_leaf(self, task: TaskNode) -> GradedTaskNode:
@@ -567,16 +570,13 @@ class SimpleJudge(Judge):
                         judge_metadata=None,
                     )
                 else:
-                    judge_token_usage = None
-                    messages = await self._construct_grade_leaf_messages(task)
+                    messages, file_selection_usage = await self._construct_grade_leaf_messages(task)
                     response: TurnCompleter.Completion = await self.completer.async_completion(
                         conversation=messages
                     )
 
                     response_usage = response.usage if hasattr(response, "usage") else None
-                    judge_token_usage = self._handle_usage(
-                        self.completer, judge_token_usage, response_usage
-                    )
+                    grading_usage = self._handle_usage(self.completer, None, response_usage)
 
                     model_response = response.output_messages[0].content
                     messages += [{"role": "assistant", "content": model_response}]
@@ -589,9 +589,17 @@ class SimpleJudge(Judge):
                     )
 
                     parse_completer = self.float_completer if continuous else self.int_completer
-                    judge_token_usage = self._handle_usage(
-                        parse_completer, judge_token_usage, parse_usage
-                    )
+                    score_parsing_usage = self._handle_usage(parse_completer, None, parse_usage)
+
+                    usage_by_stage = {
+                        "file_selection": file_selection_usage,
+                        "grading": grading_usage,
+                        "score_parsing": score_parsing_usage,
+                    }
+                    judge_token_usage = TokenUsage()
+                    for stage_usage in usage_by_stage.values():
+                        if stage_usage is not None:
+                            judge_token_usage.merge(stage_usage)
 
                     graded_task_node = GradedTaskNode.from_task(
                         task,
@@ -603,6 +611,10 @@ class SimpleJudge(Judge):
                             "token_usage": judge_token_usage.to_dict()
                             if judge_token_usage
                             else None,
+                            "token_usage_by_stage": {
+                                stage: usage.to_dict() if usage is not None else None
+                                for stage, usage in usage_by_stage.items()
+                            },
                         },
                     )
 
