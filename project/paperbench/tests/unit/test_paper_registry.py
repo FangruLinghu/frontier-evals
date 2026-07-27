@@ -12,7 +12,7 @@ def _add_paper(data_dir: Path, registry_name: str, paper_id: str) -> Path:
     return paper_dir
 
 
-def test_registry_discovers_built_in_and_nips26_rebuttal_papers(
+def test_registry_discovers_all_configured_paper_roots(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     built_in_dir = _add_paper(tmp_path, "papers", "built-in-paper")

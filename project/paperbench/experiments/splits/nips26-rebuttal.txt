@@ -3,3 +3,6 @@ dpo-misspecification
 llms-get-lost
 polar-express
 speculative-actions
+chain-of-thought
+discount-model
+llm-dna

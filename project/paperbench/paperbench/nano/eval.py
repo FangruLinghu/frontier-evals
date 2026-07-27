@@ -63,7 +63,7 @@ class PaperBench(PythonCodingEval):
             "Paper split to use. One of 'testing' (lca-on-the-line only), "
             "'debug' (rice only), 'dev' (two papers), 'human' (papers used in "
             "human baseline), 'all' (built-in full set), or 'nips26-rebuttal' "
-            "(the five NeurIPS 2026 rebuttal papers)"
+            "(the eight NeurIPS 2026 rebuttal papers)"
         ),
         # should match what is in experiments/splits/
     )
